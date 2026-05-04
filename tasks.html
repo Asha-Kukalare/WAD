@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tasks</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f4f4f4;
+  margin:0;
+}
+
+.navbar{
+  background:#333;
+  padding:15px;
+}
+
+.navbar a{
+  color:white;
+  margin:10px;
+  text-decoration:none;
+}
+
+.container{
+  width:500px;
+  margin:50px auto;
+}
+
+input{
+  width:70%;
+  padding:10px;
+}
+
+button{
+  padding:10px;
+  background:#28a745;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+.task{
+  background:white;
+  margin-top:10px;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.completed{
+  text-decoration:line-through;
+  color:gray;
+}
+
+.btn-red{
+  background:red;
+  color:white;
+  border:none;
+  padding:5px 10px;
+  cursor:pointer;
+}
+
+.task div{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+</style>
+</head>
+
+<body>
+
+<script>
+let userId = localStorage.getItem("userId");
+
+if (!userId) {
+  window.location.href = "login.html";
+}
+</script>
+
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="#" onclick="logout()">Logout</a>
+</div>
+
+<div class="container">
+
+<h2>Add Task</h2>
+
+<input type="text" id="taskInput">
+<button onclick="addTask()">Add</button>
+
+<div id="taskList"></div>
+
+</div>
+
+<script>
+
+// ---------------- LOAD TASKS ----------------
+async function loadTasks() {
+  let res = await fetch(`http://localhost:5000/api/tasks/${userId}`);
+  let data = await res.json();
+  render(data);
+}
+loadTasks();
+
+
+// ---------------- ADD TASK ----------------
+async function addTask() {
+  let input = document.getElementById("taskInput");
+  let task = input.value.trim();
+
+  if (!task) return;
+
+  let res = await fetch("http://localhost:5000/api/tasks/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, task })
+  });
+
+  if (res.ok) {
+    input.value = "";
+    loadTasks();
+  }
+}
+
+
+// ---------------- TOGGLE (FIXED) ----------------
+async function toggle(id, done) {
+  await fetch(`http://localhost:5000/api/tasks/update/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ done: done })
+  });
+
+  loadTasks();
+}
+
+
+// ---------------- DELETE ----------------
+async function del(id) {
+  await fetch(`http://localhost:5000/api/tasks/delete/${id}`, {
+    method: "DELETE"
+  });
+
+  loadTasks();
+}
+
+
+// ---------------- EDIT TASK ----------------
+async function editTask(id, oldTask) {
+
+  let newTask = prompt("Edit task:", oldTask);
+
+  if (!newTask) return;
+
+  newTask = newTask.trim();
+
+  if (newTask === "") return;
+
+  let res = await fetch(`http://localhost:5000/api/tasks/update/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ task: newTask })
+  });
+
+  if (res.ok) {
+    loadTasks();
+  } else {
+    alert("Update failed");
+  }
+}
+
+
+// ---------------- RENDER (FINAL FIX) ----------------
+function render(tasks) {
+
+  let list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  if (!tasks || tasks.length === 0) {
+    list.innerHTML = "<p>No tasks found</p>";
+    return;
+  }
+
+  tasks.forEach(t => {
+
+    let div = document.createElement("div");
+    div.className = "task";
+
+    div.innerHTML = `
+      <div>
+        <input type="checkbox" ${t.done ? "checked" : ""}>
+        <span class="${t.done ? 'completed' : ''}">${t.task}</span>
+      </div>
+
+      <div>
+        <button class="editBtn">Edit</button>
+        <button class="btn-red deleteBtn">Delete</button>
+      </div>
+    `;
+
+    // ✅ FIXED checkbox event (no auto-check bug)
+    div.querySelector("input").addEventListener("change", (event) => {
+      toggle(t._id, event.target.checked);
+    });
+
+    // edit
+    div.querySelector(".editBtn").addEventListener("click", () => {
+      editTask(t._id, t.task);
+    });
+
+    // delete
+    div.querySelector(".deleteBtn").addEventListener("click", () => {
+      del(t._id);
+    });
+
+    list.appendChild(div);
+  });
+}
+
+
+// ---------------- LOGOUT ----------------
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>

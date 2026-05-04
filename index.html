@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Home</title>
+<style>
+body{font-family:Arial;margin:0;background:#f4f4f4;}
+.navbar{background:#333;padding:15px;}
+.navbar a{color:white;margin:10px;text-decoration:none;}
+.container{text-align:center;margin-top:100px;}
+button{padding:10px 20px;background:#28a745;color:white;border:none;cursor:pointer;}
+button:hover{background:#218838;}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<a href="index.html">Home</a> 
+<a href="register.html">Register</a> 
+<a href="login.html">Login</a> 
+<a href="tasks.html">Tasks</a> 
+</div>
+
+<div class="container">
+<h1>To-Do List App</h1>
+<p>Manage your tasks easily</p>
+
+<button onclick="goToLogin()">Register</button>
+</div>
+
+<script>
+function goToLogin(){
+let user = localStorage.getItem("username");
+
+if(user){
+window.location.href="Register.html";
+}else{
+alert("No account found! Please register first.");
+window.location.href="register.html";
+}
+}
+</script>
+
+</body>
+</html>

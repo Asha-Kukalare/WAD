@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f4f4f4;
+  margin:0;
+}
+
+/* Navbar */
+.navbar{
+  background:#333;
+  padding:15px;
+}
+
+.navbar a{
+  color:white;
+  margin:10px;
+  text-decoration:none;
+}
+
+/* Login Box */
+.box{
+  width:320px;
+  margin:100px auto;
+  background:white;
+  padding:25px;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  box-sizing:border-box;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  background:#007bff;
+  color:white;
+  border:none;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+button:hover{
+  background:#0056b3;
+}
+
+.message{
+  text-align:center;
+  color:red;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="register.html">Register</a>
+  <a href="login.html">Login</a>
+  <a href="tasks.html">Tasks</a>
+</div>
+
+<!-- LOGIN BOX -->
+<div class="box">
+
+  <h2 style="text-align:center;">Login</h2>
+
+  <p id="msg" class="message"></p>
+
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <div style="text-align:center;margin-top:10px;">
+    Don't have an account?
+    <a href="register.html">Register</a>
+  </div>
+
+</div>
+
+<!-- JS -->
+<script>
+async function login() {
+
+  let username = document.getElementById("username").value.trim();
+  let password = document.getElementById("password").value.trim();
+  let msg = document.getElementById("msg");
+
+  if (!username || !password) {
+    msg.innerText = "Please fill all fields";
+    return;
+  }
+
+  try {
+
+    let res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    let data = await res.json();
+
+    console.log("LOGIN RESPONSE:", data);
+
+    // ✅ SAFE USER ID HANDLING
+    const userId = data.userId || data._id || (data.user && data.user._id);
+
+    if (res.ok && userId) {
+
+      localStorage.setItem("userId", userId);
+
+      console.log("USER ID SAVED:", userId);
+
+      // redirect to tasks page
+      window.location.href = "tasks.html";
+
+    } else {
+      msg.innerText = data.message || "Login failed";
+    }
+
+  } catch (err) {
+    console.log(err);
+    msg.innerText = "Server error. Try again.";
+  }
+}
+</script>
+
+</body>
+</html>

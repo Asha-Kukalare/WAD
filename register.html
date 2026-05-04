@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register</title>
+
+<style>
+body{
+  font-family: Arial;
+  background: #f4f4f4;
+  margin: 0;
+}
+
+.navbar{
+  background: #333;
+  padding: 15px;
+}
+
+.navbar a{
+  color: white;
+  margin: 10px;
+  text-decoration: none;
+}
+
+.box{
+  width: 320px;
+  margin: 100px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+input{
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+button{
+display:block;margin:15px auto;
+padding:10px 20px;
+background:#22c941;
+color:white;
+border:none;
+cursor:pointer;
+}
+button:hover{
+  background: #218838;
+}
+
+.message{
+  text-align: center;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="register.html">Register</a>
+  <a href="login.html">Login</a>
+  <a href="tasks.html">Tasks</a>
+</div>
+
+<!-- REGISTER BOX -->
+<div class="box">
+  <h2>Register</h2>
+
+  <p id="msg" class="message"></p>
+
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+
+  <button onclick="register()">Register</button>
+  <div style="text-align:center;margin-top:10px;">
+Already have an account?
+<a href="login.html">Login</a>
+</div>
+</div>
+
+<script>
+async function register(){
+
+let u = document.getElementById("username").value.trim();
+let p = document.getElementById("password").value.trim();
+let msg = document.getElementById("msg");
+
+msg.innerText = "";
+
+if(!u || !p){
+  msg.style.color = "red";
+  msg.innerText = "Please fill all fields!";
+  return;
+}
+
+try {
+  let res = await fetch("http://localhost:5000/api/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ username: u, password: p })
+  });
+
+  console.log("STATUS:", res.status);   
+
+  let data = await res.json();
+  console.log("DATA:", data);        
+  if(res.ok){
+  msg.style.color = "green";
+  msg.innerText = data.message || "Registered successfully!";
+  setTimeout(() => window.location.href="login.html", 1000);
+} 
+else {
+  msg.style.color = "red";
+
+  if(data.message === "User already exists"){
+    msg.innerText = "User already exists. Redirecting to login...";
+    
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1500);
+  }
+  else {
+    msg.innerText = data.message || "Registration failed!";
+  }
+}
+
+} catch(err){
+  console.log("ERROR:", err);         
+  msg.style.color = "red";
+  msg.innerText = "Server not responding!";
+}
+}
+</script>
+</body>
+</html>
